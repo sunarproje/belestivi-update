@@ -36,7 +36,7 @@ jobs:
             -c:a aac \
             -b:a 128k \
             -shortest \
-            -t 10 \
+            -t 600 \
             -f hls \
             -hls_time 2 \
             -hls_list_size 0 \
