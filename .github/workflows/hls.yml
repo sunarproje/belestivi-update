@@ -1,0 +1,57 @@
+name: Generate HLS
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  hls:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt update
+          sudo apt install -y ffmpeg
+
+      - name: Generate HLS
+        run: |
+          mkdir -p output
+
+          ffmpeg -y \
+            -loop 1 \
+            -i update.png \
+            -f lavfi \
+            -i anullsrc=r=48000:cl=stereo \
+            -c:v libx264 \
+            -preset veryfast \
+            -tune stillimage \
+            -pix_fmt yuv420p \
+            -c:a aac \
+            -b:a 128k \
+            -shortest \
+            -t 10 \
+            -f hls \
+            -hls_time 2 \
+            -hls_list_size 0 \
+            -hls_segment_filename output/segment%03d.ts \
+            output/playlist.m3u8
+
+      - name: Copy Files
+        run: |
+          cp update.png output/
+
+      - name: Publish
+        run: |
+          cp -r output/* .
+
+      - name: Commit
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Generate HLS"
